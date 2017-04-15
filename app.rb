@@ -14,6 +14,8 @@ end
 
 octokit = CachedOctokit.new(Octokit, moneta: [:GDBM, file: 'octokit_cache.gdb'])
 
+admin_logins = ENV.fetch('APP__ADMINS', '').split(/\s*,\s*/).to_set
+
 puts 'Fetching org...'
 org = octokit.org('promptworks')
 
@@ -37,12 +39,21 @@ raw_collaborations = repos.each.with_progress.map do |repo|
   [repo.full_name, octokit.collaborators(repo.full_name)]
 end
 
+is_legitimate_admin = -> (collab) do
+  admin_logins.include?(collab.login) && collab.permissions[:admin]
+end
+
+is_org_member_with_default_permissions = -> (collab) do
+  org_member_logins.include?(collab.login) &&
+    collab.permissions.to_hash == default_org_member_repo_permissions
+end
+
 collaborations = raw_collaborations.map do |repo_full_name, collabs|
-  filtered_collabs = collabs.reject do |collab|
-    org_member_logins.include?(collab.login) && collab.permissions.to_hash == default_org_member_repo_permissions
+  unexpected_collabs = collabs.reject do |collab|
+    is_legitimate_admin.(collab) || is_org_member_with_default_permissions.(collab)
   end
 
-  [repo_full_name, filtered_collabs]
+  [repo_full_name, unexpected_collabs]
 end.to_h
 
 all_collaborators = collaborations.flat_map(&:last).uniq(&:login)
@@ -82,6 +93,7 @@ template_helpers_and_data = OpenStruct.new(
   users_by_login: users_by_login,
   teams_per_repo: teams_per_repo,
   teams_per_user_login: teams_per_user_login,
+  admin_logins: admin_logins,
 )
 
 template_helpers_and_data.instance_eval do

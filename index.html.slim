@@ -17,7 +17,12 @@ html
       h2#members
         | Organization Members
         .badge<>= org_members.size
-      h3
+      p
+        strong<> Expected admins:
+        = admin_logins.to_a.join(', ')
+
+
+      p: strong
         | Default permission for members:
         strong<>: code = org.default_repository_permission
 
