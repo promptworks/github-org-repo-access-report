@@ -27,6 +27,9 @@ default_org_member_repo_permissions = case org.default_repository_permission
                                       else raise "I don't understand #{org.default_repository_permission.inspect}"
                                       end
 
+puts 'Fetching teams...'
+org_teams = octokit.org_teams('promptworks')
+
 puts 'Fetching repos...'
 repos = octokit.org_repos('promptworks', type: 'private')
 
@@ -56,23 +59,20 @@ collaborations = raw_collaborations.map do |repo_full_name, collabs|
   [repo_full_name, unexpected_collabs]
 end.to_h
 
-all_collaborators = collaborations.flat_map(&:last).uniq(&:login)
-
 puts 'Fetching teams...'
 teams_per_repo = repos.each.with_progress.map do |repo|
   [repo.full_name, octokit.repo_teams(repo.full_name)]
 end.to_h
 
-all_teams = teams_per_repo.flat_map(&:last).uniq(&:id)
-
 puts 'Fetching team members...'
-members_per_team = all_teams.each.with_progress.map do |team|
+members_per_team = org_teams.each.with_progress.map do |team|
   [team, octokit.team_members(team.id)]
 end.to_h
 
 puts 'Fetching user info...'
-users = all_collaborators.each.with_progress.map do |collaborator|
-  octokit.user(collaborator.login)
+loginables = raw_collaborations.flat_map(&:last) + org_members + members_per_team.flat_map(&:last)
+users = loginables.map(&:login).uniq.each.with_progress.map do |login|
+  octokit.user(login)
 end
 
 teams_per_user_login = members_per_team.each_with_object(Hash.new{|hash, key| hash[key] = []}) do |(team, members), hash|
@@ -86,6 +86,7 @@ users_by_login = users.map { |user| [user.login, user] }.to_h
 require 'ostruct'
 template_helpers_and_data = OpenStruct.new(
   org: org,
+  org_teams: org_teams,
   repos: repos,
   org_members: org_members,
   collaborations: collaborations,

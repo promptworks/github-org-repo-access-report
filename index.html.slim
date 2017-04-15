@@ -18,17 +18,31 @@ html
         h2#members
           | Organization Members
           .badge<>= org_members.size
+          small<>: a href="https://github.com/orgs/#{org.login}/people" target='_blank'
+            | See on Github
+
       p
         strong<> Expected admins:
         = admin_logins.to_a.join(', ')
-
 
       p: strong
         | Default permission for members:
         strong<>: code = org.default_repository_permission
 
-      p: a href="https://github.com/orgs/#{org.login}/people" target='_blank'
-        | See Members
+      ul.members
+        - org_members.each do |org_member|
+          - user = users_by_login[org_member.login]
+          - require 'pry'; binding.pry if user.nil?
+          li.member.media
+            .media-left
+              img.user-avatar src=user.avatar_url
+            .media-body
+              h4.media-heading #{user.name} (<a href=#{user.html_url} target=_blank>#{user.login}</a>)
+              .repo-teams
+                strong Teams
+                - (teams_per_user_login[user.login] & org_teams).each do |team|
+                  .repo-team.label.label-default<>= team.name
+
 
 
       .page-header
