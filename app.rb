@@ -114,6 +114,18 @@ template_helpers_and_data.instance_eval do
   def order_for_permission(permission)
     permission_details(permission).fetch(:order)
   end
+
+  def teams_for_repo(repo)
+    teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
+  end
+
+  def teams_for_user_on_repo(user, repo)
+    repo_team_ids = teams_for_repo(repo).map(&:id).to_set
+
+    teams_per_user_login[user.login].select do |team|
+      repo_team_ids.include? team.id
+    end
+  end
 end
 
 require 'slim'

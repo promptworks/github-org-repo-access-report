@@ -64,10 +64,10 @@ html
             h4
               | Teams
               small<>: a(href="#{repo.html_url}/settings/collaboration" target="_blank") on Github
-            - teams = teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
-            - if teams.any?
+            - repo_teams = teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
+            - if repo_teams.any?
               ul.teams
-                - teams.each do |team|
+                - repo_teams.each do |team|
                   li.team
                     h4
                       .permission.label class=label_for_permission(team.permission) =<> team.permission
@@ -96,7 +96,7 @@ html
                             .permission.label class=label_for_permission(permission_name) =<> permission_name
                       .repo-teams
                         strong Teams
-                        - (teams_per_user_login[user.login] & teams).each do |team|
+                        - teams_for_user_on_repo(user, repo).each do |team|
                           .repo-team.label.label-default<>= team.name
             - else
               em None
