@@ -11,13 +11,13 @@ Octokit.configure do |config|
   config.password = ENV.fetch('GITHUB__PERSONAL_TOKEN')
   config.auto_paginate = true
 end
-
 octokit = CachedOctokit.new(Octokit, moneta: [:GDBM, file: 'octokit_cache.gdb'])
 
 admin_logins = ENV.fetch('APP__ADMINS', '').split(/\s*,\s*/).to_set
+org_id = ENV.fetch('GITHUB__ORG_ID')
 
 puts 'Fetching org...'
-org = octokit.org('promptworks')
+org = octokit.org(org_id)
 
 default_org_member_repo_permissions = case org.default_repository_permission
                                       when 'admin' then { admin: true, push: true, pull: true }
@@ -28,13 +28,13 @@ default_org_member_repo_permissions = case org.default_repository_permission
                                       end
 
 puts 'Fetching teams...'
-org_teams = octokit.org_teams('promptworks')
+org_teams = octokit.org_teams(org_id)
 
 puts 'Fetching repos...'
-repos = octokit.org_repos('promptworks', type: 'private')
+repos = octokit.org_repos(org_id, type: 'private')
 
 puts 'Fetching org members...'
-org_members = octokit.org_members('promptworks')
+org_members = octokit.org_members(org_id)
 org_member_logins = org_members.map(&:login).to_set
 
 puts 'Fetching collaborators...'
