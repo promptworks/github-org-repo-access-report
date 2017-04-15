@@ -17,10 +17,13 @@ octokit = CachedOctokit.new(Octokit, moneta: [:GDBM, file: 'octokit_cache.gdb'])
 puts 'Fetching org...'
 org = octokit.org('promptworks')
 
-if org.default_repository_permission != 'write'
-  raise 'This script currently assumes that `write` is the default permission of members'
-end
-default_org_member_repo_permissions = { admin: false, push: true, pull: true }
+default_org_member_repo_permissions = case org.default_repository_permission
+                                      when 'admin' then { admin: true, push: true, pull: true }
+                                      when 'write' then { admin: false, push: true, pull: true }
+                                      when 'read'  then { admin: false, push: false, pull: true }
+                                      when 'none'  then { admin: false, push: false, pull: false }
+                                      else raise "I don't understand #{org.default_repository_permission.inspect}"
+                                      end
 
 puts 'Fetching repos...'
 repos = octokit.org_repos('promptworks', type: 'private')

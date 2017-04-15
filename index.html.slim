@@ -8,8 +8,17 @@ link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css
 hr
 
 .container
-  ul.toc
-    li: a href='#repos' Private Repositories
+
+  h2#members
+    | Organization Members
+    .badge<>= org_members.size
+  h3
+    | Default permission for members:
+    strong<>: code = org.default_repository_permission
+
+  p: a href="https://github.com/orgs/#{org.login}/people" target='_blank'
+    | See Members
+
 
   h2#repos
     | Private Repositories
@@ -24,7 +33,9 @@ hr
         =<> repo.description
         small.language=<> repo.language
 
-      h4 Teams
+      h4
+        | Teams
+        small<>: a(href="#{repo.html_url}/settings/collaboration" target="_blank") on Github
       - teams = teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
       - if teams.any?
         ul.teams
@@ -40,7 +51,6 @@ hr
 
       h4
         | Collaborators
-        .badge<>= collaborators.size
         small<>: a(href="#{repo.html_url}/settings/collaboration" target="_blank") on Github
       - if collaborators.any?
         ul.collaborators
