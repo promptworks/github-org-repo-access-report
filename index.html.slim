@@ -1,0 +1,78 @@
+link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' type='text/css' rel='stylesheet'
+
+.brand
+  h1
+    img.logo src=org.avatar_url
+    span.org = org.name
+    small<>: a href=org.html_url target="_blank" on Github
+hr
+
+.container
+  ul.toc
+    li: a href='#repos' Private Repositories
+
+  h2#repos
+    | Private Repositories
+    .badge<>= repos.size
+
+  - repos.each do |repo|
+    - collaborators = collaborations[repo.full_name].sort_by{|c| c.permissions.select(&:last).size }.reverse
+    .repo
+
+      h3
+        code<>: a href=repo.html_url target='_blank' = repo.name
+        =<> repo.description
+        small.language=<> repo.language
+
+      h4 Teams
+      - teams = teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
+      - if teams.any?
+        ul.teams
+          - teams.each do |team|
+            li.team
+              h4
+                .permission.label class=label_for_permission(team.permission) =<> team.permission
+                =<> team.name
+                code: a href="https://github.com/orgs/#{org.login}/teams/#{team.slug}" target="_blank" =<> team.slug
+      - else
+        em None
+
+
+      h4
+        | Collaborators
+        .badge<>= collaborators.size
+        small<>: a(href="#{repo.html_url}/settings/collaboration" target="_blank") on Github
+      - if collaborators.any?
+        ul.collaborators
+          - collaborators.each do |collaborator|
+            - user = users_by_login[collaborator.login]
+            li.collaborator.media
+              .media-left
+                img.user-avatar src=user.avatar_url
+              .media-body
+                h4.media-heading #{user.name} (<a href=#{user.html_url} target=_blank>#{user.login}</a>)
+                .permissions
+                  strong Permissions
+                  - collaborator.permissions.each do |permission_name, has_permission|
+                    - if has_permission
+                      .permission.label class=label_for_permission(permission_name) =<> permission_name
+                .repo-teams
+                  strong Teams
+                  - (teams_per_user_login[user.login] & teams).each do |team|
+                    .repo-team.label.label-default<>= team.name
+      - else
+        em None
+
+
+  css:
+    img.logo {
+      height: 45px;
+      margin-right: 13px;
+      margin-left: 20px;
+      margin-top: -9px;
+    }
+
+    .user-avatar {
+      height: 64px;
+      width: 64px;
+    }
