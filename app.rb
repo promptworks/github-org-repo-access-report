@@ -126,6 +126,52 @@ template_helpers_and_data.instance_eval do
       repo_team_ids.include? team.id
     end
   end
+
+  def url_repo_collaboration(repo)
+    "#{repo.html_url}/settings/collaboration"
+  end
+
+  def url_org_team(team)
+    "https://github.com/orgs/#{org.login}/teams/#{team.slug}"
+  end
+
+  def url_org_people
+    "https://github.com/orgs/#{org.login}/people"
+  end
+
+  Issue = Struct.new :type_name, :title, :body do
+    def body_html
+      "<pre>#{body}</pre>"
+    end
+  end
+
+  def teams_for_user_in_org(user)
+    teams_per_user_login[user.login] & org_teams
+  end
+
+  def issue_remove_member(user)
+    teams_list = teams_for_user_in_org(user).map do |team|
+      "- [#{team.name}](#{url_org_team(team)})"
+    end.join("\n")
+
+    Issue.new(
+      'Should be removed?',
+      "❓Remove #{user.name} / #{user.login} from #{org.name} organization?",
+      <<~BODY
+        Should [#{user.name} (`#{user.login}`)](#{user.html_url}) be removed from the #{org.name} Github organization?
+
+        They are currently a member of the organization wich gives them `#{org.default_repository_permission}` access to every repo in the organization.
+
+        Perhaps they should be a moved to an outside collaborator instead.
+
+        Modify memberships here: [List of organization members](#{url_org_people})
+
+        Currently on teams:
+
+        #{teams_list}
+      BODY
+    )
+  end
 end
 
 require 'slim'

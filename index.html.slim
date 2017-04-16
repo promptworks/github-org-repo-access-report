@@ -18,7 +18,7 @@ html
         h2#members
           | Organization Members
           .badge<>= org_members.size
-          small<>: a href="https://github.com/orgs/#{org.login}/people" target='_blank'
+          small<>: a href=url_org_people target='_blank'
             | See on Github
 
       p
@@ -33,15 +33,20 @@ html
         - org_members.each do |org_member|
           - user = users_by_login[org_member.login]
           - require 'pry'; binding.pry if user.nil?
-          li.member.media
+          li.member.media.issue-container
             .media-left
               img.user-avatar src=user.avatar_url
             .media-body
               h4.media-heading #{user.name} (<a href=#{user.html_url} target=_blank>#{user.login}</a>)
               .repo-teams
                 strong Teams
-                - (teams_per_user_login[user.login] & org_teams).each do |team|
+                - teams_for_user_in_org(user).each do |team|
                   .repo-team.label.label-default<>= team.name
+              .issue-actions
+                - issue = issue_remove_member(user)
+                button.issue.btn.btn-sm.btn-danger type='button' data-toggle='popover' title=issue.title data-content=issue.body_html
+                  = issue.type_name
+
 
 
 
@@ -72,14 +77,14 @@ html
                     h4
                       .permission.label class=label_for_permission(team.permission) =<> team.permission
                       =<> team.name
-                      code: a href="https://github.com/orgs/#{org.login}/teams/#{team.slug}" target="_blank" =<> team.slug
+                      code: a href=url_org_team(team) target="_blank" =<> team.slug
             - else
               em None
 
 
             h4
               | Collaborators
-              small<>: a(href="#{repo.html_url}/settings/collaboration" target="_blank") on Github
+              small<>: a(href=url_repo_collaboration(repo) target="_blank") on Github
             - if collaborators.any?
               ul.collaborators
                 - collaborators.each do |collaborator|
@@ -110,6 +115,14 @@ html
         margin-top: 50px;
       }
 
+      .issue-actions {
+        opacity: 0
+      }
+
+      .issue-container:hover .issue-actions {
+        opacity: 1
+      }
+
       img.logo {
         height: 45px;
         margin-right: 13px;
@@ -121,3 +134,11 @@ html
         height: 64px;
         width: 64px;
       }
+
+    script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous" type='text/javascript'
+    script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js' type='text/javascript'
+
+    javascript:
+      $(() => {
+        $('[data-toggle="popover"]').popover({html: true})
+      })
