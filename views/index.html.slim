@@ -7,9 +7,9 @@ html
 
     .brand
       h1
-        img.logo src=org.avatar_url
-        span.org = org.name
-        small<>: a href=org.html_url target="_blank" on Github
+        img.logo src=@org.avatar_url
+        span.org = @org.name
+        small<>: a href=@org.html_url target="_blank" on Github
     hr
 
     .container
@@ -17,22 +17,21 @@ html
       .page-header
         h2#members
           | Organization Members
-          .badge<>= org_members.size
+          .badge<>= @org_members.size
           small<>: a href=url_org_people target='_blank'
             | See on Github
 
       p
         strong<> Expected admins:
-        = admin_logins.to_a.join(', ')
+        = @admin_logins.to_a.join(', ')
 
       p: strong
         | Default permission for members:
-        strong<>: code = org.default_repository_permission
+        strong<>: code = @org.default_repository_permission
 
       ul.members
-        - org_members.each do |org_member|
-          - user = users_by_login[org_member.login]
-          - require 'pry'; binding.pry if user.nil?
+        - @org_members.each do |org_member|
+          - user = @users_by_login[org_member.login]
           li.member.media.issue-container
             .media-left
               img.user-avatar src=user.avatar_url
@@ -53,11 +52,11 @@ html
       .page-header
         h2#repos
           | Private Repositories
-          .badge<>= repos.size
+          .badge<>= @repos.size
 
       .repos
-        - repos.each do |repo|
-          - collaborators = collaborations[repo.full_name].sort_by{|c| c.permissions.select(&:last).size }.reverse
+        - @repos.each do |repo|
+          - collaborators = @collaborations[repo.full_name].sort_by{|c| c.permissions.select(&:last).size }.reverse
           .repo.issue-container
 
             .page-header
@@ -74,7 +73,7 @@ html
             h4
               | Teams
               small<>: a(href="#{repo.html_url}/settings/collaboration" target="_blank") on Github
-            - repo_teams = teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
+            - repo_teams = @teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
             - if repo_teams.any?
               ul.teams
                 - repo_teams.each do |team|
@@ -93,7 +92,7 @@ html
             - if collaborators.any?
               ul.collaborators
                 - collaborators.each do |collaborator|
-                  - user = users_by_login[collaborator.login]
+                  - user = @users_by_login[collaborator.login]
                   li.collaborator.media
                     .media-left
                       img.user-avatar src=user.avatar_url
