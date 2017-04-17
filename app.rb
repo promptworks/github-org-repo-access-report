@@ -169,6 +169,24 @@ template_helpers_and_data.instance_eval do
         Currently on teams:
 
         #{teams_list}
+
+        We can discuss on this card.
+      BODY
+    )
+  end
+
+  def issue_archive_repo(repo)
+    Issue.new(
+      'Archive repo?',
+      "❓Archive #{repo.name} repo?",
+      <<~BODY
+        Should we archive the [#{repo.name} repo](#{repo.html_url})?
+
+        Is it still needed? If so, should we transfer it to another owner?
+
+        Our usual archival method is to move it to Bitbucket so it doesn't cost us money.
+
+        We can discuss on this card.
       BODY
     )
   end

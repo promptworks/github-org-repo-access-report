@@ -58,13 +58,18 @@ html
       .repos
         - repos.each do |repo|
           - collaborators = collaborations[repo.full_name].sort_by{|c| c.permissions.select(&:last).size }.reverse
-          .repo
+          .repo.issue-container
 
             .page-header
               h3
                 code<>: a href=repo.html_url target='_blank' = repo.name
                 =<> repo.description
                 small.language=<> repo.language
+
+                - issue = issue_archive_repo(repo)
+                span.issue-actions
+                  button.issue.btn.btn-sm.btn-danger type='button' data-toggle='popover' title=issue.title data-content=issue.body_html
+                    = issue.type_name
 
             h4
               | Teams
@@ -116,11 +121,11 @@ html
       }
 
       .issue-actions {
-        opacity: 0
+        opacity: 0;
       }
 
       .issue-container:hover .issue-actions {
-        opacity: 1
+        opacity: 1;
       }
 
       img.logo {
