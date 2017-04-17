@@ -42,11 +42,7 @@ html
                 - teams_for_user_in_org(user).each do |team|
                   .repo-team.label.label-default<>= team.name
               .issue-actions
-                - issue = issue_remove_member(user)
-                button.issue.btn.btn-sm.btn-danger type='button' data-toggle='popover' title=issue.title data-content=issue.body_html
-                  = issue.type_name
-
-
+                == issue_button(issue_remove_member(user))
 
 
       .page-header
@@ -65,10 +61,9 @@ html
                 =<> repo.description
                 small.language=<> repo.language
 
-                - issue = issue_archive_repo(repo)
+
                 span.issue-actions
-                  button.issue.btn.btn-sm.btn-danger type='button' data-toggle='popover' title=issue.title data-content=issue.body_html
-                    = issue.type_name
+                  == issue_button issue_archive_repo(repo)
 
             h4
               | Teams

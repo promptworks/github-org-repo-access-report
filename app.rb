@@ -106,6 +106,10 @@ helpers do
       BODY
     )
   end
+
+  def issue_button(issue)
+    slim :'_issue_button.html', locals: { issue: issue }
+  end
 end
 
 get '/' do
