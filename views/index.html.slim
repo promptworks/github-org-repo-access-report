@@ -53,22 +53,21 @@ html
       .repos
         - @repos.each do |repo|
           - collaborators = @collaborations[repo.full_name].sort_by{|c| c.permissions.select(&:last).size }.reverse
+          - repo_teams = @teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
           .repo.issue-container
 
             .page-header
               h3
                 code<>: a href=repo.html_url target='_blank' = repo.name
                 =<> repo.description
-                small.language=<> repo.language
-
 
                 span.issue-actions
                   == issue_button issue_archive_repo(repo)
+                  == issue_button issue_delegate_audit(repo, repo_teams, collaborators)
 
             h4
               | Teams
-              small<>: a(href="#{repo.html_url}/settings/collaboration" target="_blank") on Github
-            - repo_teams = @teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
+              small<>: a(href=url_repo_collaboration(repo) target="_blank") on Github
             - if repo_teams.any?
               ul.teams
                 - repo_teams.each do |team|

@@ -22,11 +22,19 @@ end
 helpers do
   def permission_details(permission)
     case permission.to_s
-    when 'admin' then { label: 'label-danger',  order: 0 }
-    when 'push'  then { label: 'label-warning', order: 1 }
-    when 'pull'  then { label: 'label-info',    order: 2 }
+    when 'admin' then { name: 'admin', label: 'label-danger',  order: 0, emoji: '🔴' }
+    when 'push'  then { name: 'write', label: 'label-warning', order: 1, emoji: '🌕' }
+    when 'pull'  then { name: 'read',  label: 'label-info',    order: 2, emoji: '🔵' }
     else raise "Don't know permission #{permission.inspect}"
     end
+  end
+
+  def highest_permission(permissions)
+    %i[admin push pull].detect {|p| permissions.to_h.fetch(p) }
+  end
+
+  def highest_permission_details(permissions)
+    permission_details(highest_permission(permissions))
   end
 
   def label_for_permission(permission)
@@ -103,6 +111,63 @@ helpers do
         Our usual archival method is to move it to Bitbucket so it doesn't cost us money.
 
         We can discuss on this card.
+      BODY
+    )
+  end
+
+  def md_permission_label(permission_name)
+    permission = permission_details(permission_name)
+    "#{permission.fetch(:emoji)} #{permission.fetch(:name)}"
+  end
+
+  def issue_delegate_audit(repo, repo_teams, collaborators)
+    repo_teams_list = repo_teams.map do |team|
+      "- [#{team.name}](#{url_org_team(team)}) #{md_permission_label(team.permission)}"
+    end.join("\n")
+
+    collabs_list = collaborators.map do |collaborator|
+      user = @users_by_login[collaborator.login]
+
+      teams = teams_for_user_on_repo(user, repo)
+
+      teams_list = if teams.any?
+                     teams.map{|team| "*#{team.name}*" }.join(', ')
+                   else
+                     "*None*"
+                   end
+
+      permission_md = md_permission_label(highest_permission(collaborator.permissions))
+      <<~USER
+
+        ---
+
+        ## #{user.name}
+        [#{user.login}](#{user.html_url}) — #{permission_md}
+
+        Teams: #{teams_list}
+      USER
+    end.join("\n")
+
+    Issue.new(
+      'Delegate audit',
+      "Confirm #{repo.name} repo collaborators",
+      <<~BODY
+        Can you confirm that the following users should have access to the [#{repo.name} repo](#{repo.html_url}) and that their access level is correct?
+
+        Also, note, that every [PromptWorks organization member](#{url_repo_collaboration(repo)}) has write access to this repo.
+
+        # Teams
+        [View on Github](#{url_repo_collaboration(repo)})
+
+        #{repo_teams.any? ? repo_teams_list : '*None*'}
+
+        # Collaborators
+        #{collaborators.any? ? collabs_list : '*None*'}
+
+        If you are an admin, you can [see the access permissions here].
+
+        We can discuss on this card.
+
       BODY
     )
   end
