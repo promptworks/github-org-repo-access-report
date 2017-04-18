@@ -32,7 +32,7 @@ html
       ul.members
         - @org_members.each do |org_member|
           - user = @users_by_login[org_member.login]
-          li.member.media.issue-container
+          li.member.media
             .media-left
               img.user-avatar src=user.avatar_url
             .media-body
@@ -54,16 +54,15 @@ html
         - @repos.each do |repo|
           - collaborators = @collaborations[repo.full_name].sort_by{|c| c.permissions.select(&:last).size }.reverse
           - repo_teams = @teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
-          .repo.issue-container
+          .repo
 
             .page-header
               h3
                 code<>: a href=repo.html_url target='_blank' = repo.name
                 =<> repo.description
 
-                span.issue-actions
-                  == issue_button issue_archive_repo(repo)
-                  == issue_button issue_delegate_audit(repo, repo_teams, collaborators)
+                == issue_button issue_archive_repo(repo)
+                == issue_button issue_delegate_audit(repo, repo_teams, collaborators)
 
             h4
               | Teams
@@ -109,15 +108,16 @@ html
       .repo {
         margin-top: 75px;
       }
+
       .repo:first-child {
         margin-top: 50px;
       }
 
-      .issue-actions {
-        opacity: 0;
+      button.issue {
+        opacity: 0.5;
       }
 
-      .issue-container:hover .issue-actions {
+      button.issue:hover {
         opacity: 1;
       }
 

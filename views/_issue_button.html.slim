@@ -1,2 +1,13 @@
-button.issue.btn.btn-sm.btn-danger type='button' data-toggle='popover' title=issue.title data-content=issue.body_html
+- id = "modal-#{rand.to_s[2..-1]}"
+button.issue.btn.btn-sm.btn-danger type='button' data-toggle='modal' data-target="##{id}"
   = issue.type_name
+
+.modal id=id role='dialog' tabindex='-1'
+  .modal-dialog.modal-lg role='document'
+    .modal-content
+      .modal-header
+        button.close aria-label='Close' data-dismiss='modal' type='button'
+          span aria-hidden='true'  &times;
+        h4.modal-title = issue.title
+      .modal-body
+        pre = issue.body
