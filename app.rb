@@ -141,7 +141,7 @@ helpers do
 
         ---
 
-        ## #{user.name}
+        ## #{user.name || user.login}
         [#{user.login}](#{user.html_url}) — #{permission_md}
 
         Teams: #{teams_list}
@@ -156,6 +156,10 @@ helpers do
 
         Also, note, that every [PromptWorks organization member](#{url_repo_collaboration(repo)}) has write access to this repo.
 
+        If you are an admin, you can [see the access permissions here].
+
+        We can discuss on this card.
+
         # Teams
         [View on Github](#{url_repo_collaboration(repo)})
 
@@ -163,10 +167,6 @@ helpers do
 
         # Collaborators
         #{collaborators.any? ? collabs_list : '*None*'}
-
-        If you are an admin, you can [see the access permissions here].
-
-        We can discuss on this card.
 
       BODY
     )
