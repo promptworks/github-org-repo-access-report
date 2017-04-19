@@ -150,7 +150,7 @@ html
       $(() => {
         $('[data-toggle="popover"]').popover({html: true})
 
-        $('[data-copy-target]').on('click', (event) => {
+        const copy = (event) => {
           const copyTargetSelector = $(event.target).data('copy-target')
           const copyTargetEl = $(copyTargetSelector).get(0)
 
@@ -165,5 +165,10 @@ html
           event.target.innerText = event.target.innerText.replace('⬜️', msg)
 
           window.getSelection().removeAllRanges()
+        }
+
+        $('[data-copy-target]').on('click', (event) => {
+          copy(event)
+          setTimeout(() => copy(event), 1)
         })
       })
