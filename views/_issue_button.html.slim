@@ -8,6 +8,10 @@ button.issue.btn.btn-sm.btn-danger type='button' data-toggle='modal' data-target
       .modal-header
         button.close aria-label='Close' data-dismiss='modal' type='button'
           span aria-hidden='true'  &times;
-        h4.modal-title = issue.title
+        h4.modal-title
+          button.btn.btn-sm data-copy-target='##{id} .title-content' type='button' Copy ⬜️
+          span.title-content = issue.title
+
       .modal-body
-        pre = issue.body
+        p: button.btn.btn-sm data-copy-target='##{id} .body-content' type='button' Copy ⬜️
+        pre.body-content = issue.body

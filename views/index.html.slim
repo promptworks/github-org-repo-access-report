@@ -149,4 +149,21 @@ html
     javascript:
       $(() => {
         $('[data-toggle="popover"]').popover({html: true})
+
+        $('[data-copy-target]').on('click', (event) => {
+          const copyTargetSelector = $(event.target).data('copy-target')
+          const copyTargetEl = $(copyTargetSelector).get(0)
+
+          const range = document.createRange()
+          range.selectNode(copyTargetEl)
+          window.getSelection().addRange(range)
+
+          const successful = document.execCommand('copy')
+          const msg = successful ? '✅' : '🚫'
+          console.log('Copy email command was ' + msg)
+
+          event.target.innerText = event.target.innerText.replace('⬜️', msg)
+
+          window.getSelection().removeAllRanges()
+        })
       })
