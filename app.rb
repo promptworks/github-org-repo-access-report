@@ -6,8 +6,8 @@ require 'set'
 require_relative 'lib/cached_octokit'
 
 Octokit.configure do |config|
-  config.login = ENV.fetch('GITHUB__LOGIN_NAME')
-  config.password = ENV.fetch('GITHUB__PERSONAL_TOKEN')
+  config.login = ENV.fetch('GITHUB__LOGIN')
+  config.password = ENV.fetch('GITHUB__PERSONAL_ACCESS_TOKEN')
   config.auto_paginate = true
 end
 octokit = CachedOctokit.new(Octokit, moneta: [:GDBM, file: 'octokit_cache.gdb'])
@@ -178,7 +178,7 @@ helpers do
 end
 
 get '/' do
-  @admin_logins = ENV.fetch('APP__ADMINS', '').split(/\s*,\s*/).to_set
+  @org_owner_logins = ENV.fetch('GITHUB__ORG_OWNER_LOGINS', '').split(/\s*,\s*/).to_set
   @org_id = ENV.fetch('GITHUB__ORG_ID')
 
   puts 'Fetching org...'
@@ -208,7 +208,7 @@ get '/' do
   end
 
   is_legitimate_admin = -> (collab) do
-    @admin_logins.include?(collab.login) && collab.permissions[:admin]
+    @org_owner_logins.include?(collab.login) && collab.permissions[:admin]
   end
 
   is_org_member_with_default_permissions = -> (collab) do
