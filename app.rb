@@ -69,6 +69,10 @@ helpers do
     "https://github.com/orgs/#{@org.login}/people"
   end
 
+  def url_org_member_settings
+    "https://github.com/organizations/#{@org.login}/settings/member_privileges"
+  end
+
   def teams_for_user_in_org(user)
     @teams_per_user_login[user.login] & @org_teams
   end
@@ -88,7 +92,7 @@ helpers do
 
         Perhaps they should be a moved to an outside collaborator instead.
 
-        Modify memberships here: [List of organization members](#{url_org_people})
+        Modify memberships here: [List of #{@org.name} organization members](#{url_org_people})
 
         Currently on teams:
 
@@ -154,9 +158,9 @@ helpers do
       <<~BODY
         Can you confirm that the following users should have access to the [#{repo.name} repo](#{repo.html_url}) and that their access level is correct?
 
-        Also, note, that every [PromptWorks organization member](#{url_repo_collaboration(repo)}) has write access to this repo.
+        Note: [Every #{@org.name} organization member](#{url_org_people}) has write access to this repo.
 
-        If you are an admin, you can [see the access permissions here].
+        If you are an #{@org.name} organization owner, you can [see & modify the access permissions here](#{url_org_member_settings}).
 
         We can discuss on this card.
 
