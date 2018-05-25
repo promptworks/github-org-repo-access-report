@@ -7,6 +7,7 @@ GEM
     dotenv (2.2.0)
     faraday (0.12.0.1)
       multipart-post (>= 1.2, < 3)
+    ffi (1.9.23)
     method_source (0.8.2)
     moneta (1.0.0)
     multipart-post (2.0.0)
@@ -20,6 +21,14 @@ GEM
     rack (1.6.5)
     rack-protection (1.5.3)
       rack
+    rb-fsevent (0.10.3)
+    rb-inotify (0.9.10)
+      ffi (>= 0.5.0, < 2)
+    sass (3.5.6)
+      sass-listen (~> 4.0.0)
+    sass-listen (4.0.0)
+      rb-fsevent (~> 0.9, >= 0.9.4)
+      rb-inotify (~> 0.9, >= 0.9.7)
     sawyer (0.8.1)
       addressable (>= 2.3.5, < 2.6)
       faraday (~> 0.8, < 1.0)
@@ -33,6 +42,7 @@ GEM
       temple (~> 0.7.6)
       tilt (>= 1.3.3, < 2.1)
     slop (3.6.0)
+    sqlite3 (1.3.13)
     temple (0.7.7)
     tilt (2.0.7)
     tqdm (0.3.0)
@@ -45,13 +55,15 @@ DEPENDENCIES
   moneta
   octokit
   pry
+  sass
   shotgun
   sinatra
   slim
+  sqlite3
   tqdm
 
 RUBY VERSION
    ruby 2.4.1p111
 
 BUNDLED WITH
-   1.14.6
+   1.16.2

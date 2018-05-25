@@ -3,172 +3,112 @@ html
   head
     meta http-equiv='Content-Type' content='text/html; charset=utf-8'
     link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' type='text/css' rel='stylesheet'
-  body
+  body: .container
 
-    .brand
-      h1
-        img.logo src=@org.avatar_url
-        span.org = @org.name
-        small<>: a href=@org.html_url target="_blank" on Github
-    hr
+    section
+      .title Organization
+      .fact
+        .statement
+          | Default permission for members is:
+          code = @org.default_repository_permission
+        .help Options: https://developer.github.com/v3/orgs/#edit-an-organization
 
-    .container
+    section
+      .title Organization members
 
-      .page-header
-        h2#members
-          | Organization Members
-          .badge<>= @org_members.size
-          small<>: a href=url_org_people target='_blank'
-            | See on Github
+      - @org_memberships.each do |membership|
+        - user = @users_by_login.fetch(membership.user.login)
 
-      p
-        strong<> Expected admins:
-        = @admin_logins.to_a.join(', ')
+        section
+          .title #{user.name} <code>#{user.login}</code>
+          .fact id="#{user.login}-belongs-to-org": .statement belongs in this organization
+          .fact depends-on='previous': .statement has the role <code>#{membership.role}</code>
 
-      p: strong
-        | Default permission for members:
-        strong<>: code = @org.default_repository_permission
+          section depends-on="#{user.login}-belongs-to-org"
+            .title belongs to these teams:
+            - teams_for_user_in_org(user).each do |team|
+              .fact: .statement belongs to team <em>#{team.name}</em>
 
-      ul.members
-        - @org_members.each do |org_member|
-          - user = @users_by_login[org_member.login]
-          li.member.media
-            .media-left
-              img.user-avatar src=user.avatar_url
-            .media-body
-              h4.media-heading #{user.name} (<a href=#{user.html_url} target=_blank>#{user.login}</a>)
-              .repo-teams
-                strong Teams
-                - teams_for_user_in_org(user).each do |team|
-                  .repo-team.label.label-default<>= team.name
-              .issue-actions
-                == issue_button(issue_remove_member(user))
+    section
+      .title Private Repositories
 
+      - @repos.take(10).each do |repo|
+        section
+          .title = repo.name
+          .description
+            p = repo.description
+            p = repo.html_url
 
-      .page-header
-        h2#repos
-          | Private Repositories
-          .badge<>= @repos.size
+          section
+            .title Teams that have access to <code>#{repo.name}</code>
+            .description = url_repo_collaboration(repo)
 
-      .repos
-        - @repos.each do |repo|
-          - collaborators = @collaborations[repo.full_name].sort_by{|c| c.permissions.select(&:last).size }.reverse
-          - repo_teams = @teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
-          .repo
-
-            .page-header
-              h3
-                code<>: a href=repo.html_url target='_blank' = repo.name
-                =<> repo.description
-
-                == issue_button issue_archive_repo(repo)
-                == issue_button issue_delegate_audit(repo, repo_teams, collaborators)
-
-            h4
-              | Teams
-              small<>: a(href=url_repo_collaboration(repo) target="_blank") on Github
+            - repo_teams = @teams_per_repo[repo.full_name].sort_by{|team| order_for_permission(team.permission) }
             - if repo_teams.any?
-              ul.teams
-                - repo_teams.each do |team|
-                  li.team
-                    h4
-                      .permission.label class=label_for_permission(team.permission) =<> team.permission
-                      =<> team.name
-                      code: a href=url_org_team(team) target="_blank" =<> team.slug
+              - repo_teams.each do |team|
+                section
+                  .title = team.name
+                  .description = url_org_team(team)
+
+                  .fact: .statement <code>#{team.name}</code> has access
+                  .fact depends-on='previous': .statement Permission level <code>#{team.permission}</code>
             - else
-              em None
+              .fact: .statement No teams have access to <code>#{repo.name}</code>
 
-
-            h4
-              | Collaborators
-              small<>: a(href=url_repo_collaboration(repo) target="_blank") on Github
+          section
+            .title Collaborators
+            .description
+              p = url_repo_collaboration(repo)
+            - collaborators = @collaborations.fetch(repo.full_name).sort_by{|c| -c.permissions.select(&:last).size }
             - if collaborators.any?
-              ul.collaborators
-                - collaborators.each do |collaborator|
-                  - user = @users_by_login[collaborator.login]
-                  li.collaborator.media
-                    .media-left
-                      img.user-avatar src=user.avatar_url
-                    .media-body
-                      h4.media-heading #{user.name} (<a href=#{user.html_url} target=_blank>#{user.login}</a>)
-                      .permissions
-                        strong Permissions
-                        - collaborator.permissions.each do |permission_name, has_permission|
-                          - if has_permission
-                            .permission.label class=label_for_permission(permission_name) =<> permission_name
-                      .repo-teams
-                        strong Teams
-                        - teams_for_user_on_repo(user, repo).each do |team|
-                          .repo-team.label.label-default<>= team.name
+              - collaborators.each do |collaborator|
+                - user = @users_by_login.fetch(collaborator.login)
+                section
+                  .title #{user.name} <code>#{user.login}</code>
+                  .description
+                    p = user.html_url
+                    p
+                      | via teams:
+                      - teams_for_user_on_repo(user, repo).each do |team|
+                        code =<> team.name
+
+                  .fact: .statement has access to this repo
+                  .fact depends-on='previous': .statement
+                    | has only these permissions:
+                    - collaborator.permissions.select(&:last).map(&:first).each do |permission_name|
+                      code =<> permission_name
             - else
-              em None
+              .fact: .statement has no collaborators other than users who have access to all repos due to being an organization admin or the organization having default permissions other than <code>none</code>
 
 
-    css:
-      .repo {
-        margin-top: 75px;
-      }
+sass:
+  .repo
+    margin-top: 75px
 
-      .repo:first-child {
-        margin-top: 50px;
-      }
+    &:first-child
+      margin-top: 50px
 
-      button.issue {
-        opacity: 0.5;
-      }
+  .statement:before
+    content: '✅ '
 
-      button.issue:hover {
-        opacity: 1;
-      }
+  .help
+    padding-left: 25px
+    &:before
+      content: '❔ '
 
+  .title
+    font-weight: bold
 
-      .member button.issue {
-        margin-left: 10px;
-        margin-top: 10px;
-      }
+  section
+    margin:
+      top: 20px
+      left: 20px
 
-      .page-header button.issue {
-        margin-left: 10px;
-      }
-
-      img.logo {
-        height: 45px;
-        margin-right: 13px;
-        margin-left: 20px;
-        margin-top: -9px;
-      }
-
-      .user-avatar {
-        height: 64px;
-        width: 64px;
-      }
-
-    script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous" type='text/javascript'
-    script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js' type='text/javascript'
-
-    javascript:
-      $(() => {
-        $('[data-toggle="popover"]').popover({html: true})
-
-        const copy = (event) => {
-          const copyTargetSelector = $(event.target).data('copy-target')
-          const copyTargetEl = $(copyTargetSelector).get(0)
-
-          const range = document.createRange()
-          range.selectNode(copyTargetEl)
-          window.getSelection().addRange(range)
-
-          const successful = document.execCommand('copy')
-          const msg = successful ? '✅' : '🚫'
-          console.log('Copy email command was ' + msg)
-
-          event.target.innerText = event.target.innerText.replace('⬜️', msg)
-
-          window.getSelection().removeAllRanges()
-        }
-
-        $('[data-copy-target]').on('click', (event) => {
-          copy(event)
-          setTimeout(() => copy(event), 1)
-        })
-      })
+  section .title
+    font-size: 225%
+  section section .title
+    font-size: 175%
+  section section section .title
+    font-size: 150%
+  section section section section .title
+    font-size: 125%
