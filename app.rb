@@ -3,6 +3,8 @@ require 'dotenv/load'
 require 'octokit'
 require 'tqdm'
 require 'set'
+require 'nokogiri'
+
 require_relative 'lib/cached_octokit'
 
 Octokit.configure do |config|
@@ -28,18 +30,6 @@ helpers do
     when 'pull'  then { name: 'read',  label: 'label-info',    order: 2, emoji: '🔵' }
     else raise "Don't know permission #{permission.inspect}"
     end
-  end
-
-  def highest_permission(permissions)
-    %i[admin push pull].detect {|p| permissions.to_h.fetch(p) }
-  end
-
-  def highest_permission_details(permissions)
-    permission_details(highest_permission(permissions))
-  end
-
-  def label_for_permission(permission)
-    permission_details(permission).fetch(:label)
   end
 
   def order_for_permission(permission)
@@ -133,20 +123,28 @@ get '/' do
     end
   end
 
+  # https://developer.github.com/v3/orgs/members/#add-or-update-organization-membership
+  @possible_organization_member_roles = %w[ admin member ]
+
   @org_admin_logins = lazily do
     @org_memberships
       .select{ |membership| membership.role == 'admin' }
       .map { |membership| membership.user.login }
   end
 
+  # https://developer.github.com/v3/teams/members/#parameters
+  @team_permission_options = %w[ member maintainer ]
+
+  # https://developer.github.com/v3/orgs/#input
+  @organization_default_permission_options = {
+    'admin' => { admin: true,  push: true,  pull: true  },
+    'write' => { admin: false, push: true,  pull: true  },
+    'read'  => { admin: false, push: false, pull: true  },
+    'none'  => { admin: false, push: false, pull: false },
+  }
+
   @default_org_member_repo_permissions = lazily do
-    case @org.default_repository_permission
-    when 'admin' then { admin: true, push: true, pull: true }
-    when 'write' then { admin: false, push: true, pull: true }
-    when 'read'  then { admin: false, push: false, pull: true }
-    when 'none'  then { admin: false, push: false, pull: false }
-    else raise "I don't understand #{@org.default_repository_permission.inspect}"
-    end
+    @organization_default_permission_options.fetch(@org.default_repository_permission)
   end
 
   @org_teams = lazily do
@@ -225,5 +223,9 @@ get '/' do
 
   @users_by_login = lazily { @users.by(&:login) }
 
-  slim :'index.html'
+  content_type 'text/xml'
+  xml = slim :'index.xml'
+  # Nokogiri::XML(xml)
+  # require 'pry'; binding.pry
+  # jbuilder :'index'
 end

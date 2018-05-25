@@ -5,9 +5,9 @@ gem 'octokit'
 gem 'dotenv'
 gem 'moneta'
 gem 'sinatra'
-gem 'slim'
 gem 'sqlite3'
-gem 'sass'
+gem 'slim'
+gem 'nokogiri'
 
 gem 'tqdm'
 
