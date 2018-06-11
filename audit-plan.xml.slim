@@ -4,19 +4,22 @@ audit
   title GitHub Access Audit
   description
 
+  auditor#bob title='Bob' role='admin' email='bob@example.com' slack='bob'
+  auditor#alice title='Alice' email='alice@example.com' slack='alice'
+
   section#organization-attributes
     title Organization
 
     fact#organization-default-repo-persission
-      title Default permission for members is `#{@org.default_repository_permission}`
+      title Default permission for members is `#{org.default_repository_permission}`
       description
         | [Options](https://developer.github.com/v3/orgs/#edit-an-organization)
 
   section#organization-members
     title Organization members
 
-    - @org_memberships.take(5).each do |membership|
-      - user = @users_by_login.fetch(membership.user.login)
+    - org_memberships.each do |membership|
+      - user = users_by_login.fetch(membership.user.login)
 
       section id=user.login
         title #{user.name} `#{user.login}`
@@ -28,7 +31,7 @@ audit
             fact#has-role
               title has the role `#{membership.role}`
 
-              - @possible_organization_member_roles.grep_v(membership.role).each do |role|
+              - POSSIBLE_ORGANIZATION_MEMBER_ROLES.grep_v(membership.role).each do |role|
                 modify id=role assign-to='admin'
                   title should have role `#{role}`
 
@@ -42,7 +45,7 @@ audit
   section#private-repositories
     title Private Repositories
 
-    - @repos.take(5).each do |repo|
+    - repos.each do |repo|
       section id=repo.name
         title = repo.name
         description
@@ -53,7 +56,7 @@ audit
           title Teams that have access to `#{repo.name}`
           description = url_repo_collaboration(repo)
 
-          - repo_teams = @teams_per_repo.fetch(repo.full_name).sort_by{|team| order_for_permission(team.permission) }
+          - repo_teams = teams_per_repo.fetch(repo.full_name).sort_by{|team| order_for_permission(team.permission) }
           - repo_teams.each do |team|
             section id=team.slug
               title = team.name
@@ -66,11 +69,9 @@ audit
                   fact#permission-level
                     title Permission level `#{team.permission}`
 
-                    - @team_permission_options.grep_v(team.permission).each do |permission|
+                    - TEAM_PERMISSION_OPTIONS.grep_v(team.permission).each do |permission|
                       modify id="change-to:#{permission}"
                         title permission should be set to `#{permission}`
-
-                reject Team access should be removed
 
           - if repo_teams.none?
             fact#no-teams-have-access
@@ -83,9 +84,9 @@ audit
           title Collaborators
           description = url_repo_collaboration(repo)
 
-          - collaborators = @collaborations.fetch(repo.full_name).sort_by{|c| -c.permissions.select(&:last).size }
+          - collaborators = collaborations.fetch(repo.full_name).sort_by{|c| -c.permissions.select(&:last).size }
           - collaborators.each do |collaborator|
-            - user = @users_by_login.fetch(collaborator.login)
+            - user = users_by_login.fetch(collaborator.login)
             section id=user.login
               title #{user.name} `#{user.login}`
 
@@ -108,8 +109,6 @@ audit
                     - collaborator.permissions.select(&:reject).map(&:first).each do |permission_name|
                       modify id=permission_name
                         | Set permission level to `#{permission_name}`
-
-                reject This user should not have access to this repo
 
           - if collaborators.none?
             fact#has-no-collaborators
