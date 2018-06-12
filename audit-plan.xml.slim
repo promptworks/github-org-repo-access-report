@@ -11,9 +11,9 @@ audit
     title Organization
 
     fact#organization-default-repo-persission
-      title Default permission for members is `#{org.default_repository_permission}`
-      description
-        | [Options](https://developer.github.com/v3/orgs/#edit-an-organization)
+      title Default permission for members is <code>#{org.default_repository_permission}</code>
+      description: markdown:
+        [Options](https://developer.github.com/v3/orgs/#edit-an-organization)
 
   section#organization-members
     title Organization members
@@ -22,25 +22,25 @@ audit
       - user = users_by_login.fetch(membership.user.login)
 
       section id=user.login
-        title #{user.name} `#{user.login}`
+        title #{user.name} <code>#{user.login}</code>
 
         fact#belongs-to-org
           title belongs in this organization
 
           accept
             fact#has-role
-              title has the role `#{membership.role}`
+              title has the role <code>#{membership.role}</code>
 
               - POSSIBLE_ORGANIZATION_MEMBER_ROLES.grep_v(membership.role).each do |role|
                 modify id=role assign-to='admin'
-                  title should have role `#{role}`
+                  title should have role <code>#{role}</code>
 
             section#teams
               title Teams user is on
 
               - teams_for_user_in_org(user).each do |team|
                 fact id="belongs-to-team:#{team.slug}"
-                  title belongs to team *#{team.name}*
+                  title belongs to team <strong>#{team.name}</strong>
 
   section#private-repositories
     title Private Repositories
@@ -53,7 +53,7 @@ audit
           p = repo.html_url
 
         section#teams
-          title Teams that have access to `#{repo.name}`
+          title Teams that have access to <code>#{repo.name}</code>
           description = url_repo_collaboration(repo)
 
           - repo_teams = teams_per_repo.fetch(repo.full_name).sort_by{|team| order_for_permission(team.permission) }
@@ -63,19 +63,19 @@ audit
               description = url_org_team(team)
 
               fact#has-access
-                title `#{team.name}` has access to this repo
+                title <code>#{team.name}</code> has access to this repo
 
                 accept
                   fact#permission-level
-                    title Permission level `#{team.permission}`
+                    title Permission level <code>#{team.permission}</code>
 
                     - TEAM_PERMISSION_OPTIONS.grep_v(team.permission).each do |permission|
                       modify id="change-to:#{permission}"
-                        title permission should be set to `#{permission}`
+                        title permission should be set to <code>#{permission}</code>
 
           - if repo_teams.none?
             fact#no-teams-have-access
-              title No teams have access to `#{repo.name}`
+              title No teams have access to <code>#{repo.name}</code>
 
               reject: input Teams that should have access:
 
@@ -88,14 +88,15 @@ audit
           - collaborators.each do |collaborator|
             - user = users_by_login.fetch(collaborator.login)
             section id=user.login
-              title #{user.name} `#{user.login}`
+              title #{user.name} <code>#{user.login}</code>
 
               description
                 p = user.html_url
                 p
                   | via teams:
-                  - teams_for_user_on_repo(user, repo).each do |team|
-                    | `#{team.name}`
+                  ul
+                    - teams_for_user_on_repo(user, repo).each do |team|
+                      li: code = team.name
 
               fact#has-access-to-repo
                 title has access to this repo
@@ -103,16 +104,16 @@ audit
                 accept
                   - permission_level = collaborator.permissions.detect(&:last).first
                   fact id="has-permission-level:#{permission_level}"
-                    title has permission level #{permission_level}
+                    title has permission level <code>#{permission_level}</code>
                     description Permission levels url: ____
 
                     - collaborator.permissions.select(&:reject).map(&:first).each do |permission_name|
                       modify id=permission_name
-                        | Set permission level to `#{permission_name}`
+                        title Set permission level to <code>#{permission_name}</code>
 
           - if collaborators.none?
             fact#has-no-collaborators
               title Repo has no collaborators...
-              description ...other than users who have access to all repos due to being an organization admin or the organization having default permissions set to something other than than `none`.
+              description ...other than users who have access to all repos due to being an organization admin or the organization having default permissions set to something other than than <code>none</code>.
 
               reject: input These collaborators should be added:
